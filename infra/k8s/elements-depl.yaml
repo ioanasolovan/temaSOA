@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elements-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elements
+  template:
+    metadata:
+      labels:
+        app: elements
+    spec:
+      containers:
+        - name: elements
+          image: solovanioana/elements
+          env:
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_URL
+              value: 'http://nats-srv:4222'
+            - name: NATS_CLUSTER_ID
+              value: 'tema'
+            - name: MONGO_URI
+              value: 'mongodb://elements-mongo-srv:27017/elements'
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elements-srv
+spec:
+  selector:
+    app: elements
+  ports:
+    - name: elements
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
